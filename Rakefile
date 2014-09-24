@@ -1,3 +1,5 @@
+require 'httparty'
+require 'sequel'
 # A method to get the name of our project from the root directory
 # Rakefiles are just ruby so we can write methods in here too!
 def project_name
@@ -88,4 +90,40 @@ namespace :db do
     Rake::Task['environment'].invoke(env)
     require './db/seeds'
   end
+
+      # String      :email,      :size=>127, :null=>false
+      # String      :name,       :size=>127, :null=>false
+      # String      :gender,     :size=>127, :null=>false
+      # String      :picture,    :size=>127, :null=>false
+      # Integer     :dob,                    :null=>false
+      # String      :phone,      :size=>127, :null=>false
+      # String      :location,   :size=>127, :null=>false
+      # String      :password,   :size=>127, :null=>false
+
+  desc "seeds random users to database"
+  task :seed_random_users, [:env] do |cmd, args|
+    env = args[:env] || ENV["RACK_ENV"] || "development"
+    # load up my sinatra environment
+    # then populate my database
+    # calls rake environment[env]
+    Rake::Task['environment'].invoke(env)
+    puts "loaded environment"
+    puts "fetching random users"
+
+    10.times do
+      user = HTTParty.get("http://api.randomuser.me/")
+      User.create(
+      email:          user["results"][0]["user"]["email"],
+      name:           user["results"][0]["user"]["name"]["first"],
+      gender:         user["results"][0]["user"]["gender"],
+      picture:        user["results"][0]["user"]["picture"]["large"],
+      dob:            user["results"][0]["user"]["dob"].to_i,
+      phone:          user["results"][0]["user"]["phone"],
+      location:       user["results"][0]["user"]["location"]["state"],
+      password:       user["results"][0]["user"]["password"],
+      )
+
+    end
+  end
+
 end
